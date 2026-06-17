@@ -19,6 +19,22 @@ end
 return current
 """
 
+
+def iter_routes(routes):
+    """Aplatit récursivement les routers inclus.
+
+    FastAPI >= 0.116 imbrique les routers via des `_IncludedRouter` présents dans
+    `app.routes` SANS attribut `path`/`methods`. Itérer `app.routes` brut et lire
+    `route.path` lève alors `AttributeError`. On descend récursivement et on ne yield
+    que les vraies routes (avec `path` + `methods`), pour garder un index par-route.
+    """
+    for route in routes:
+        if hasattr(route, "path") and hasattr(route, "methods"):
+            yield route
+        sub = getattr(route, "routes", None)
+        if sub:
+            yield from iter_routes(sub)
+
 async def mark_request_ignored(request: Request, response: Response) -> None:
     """
     Marque une requête comme devant être ignorée du rate limiting principal.
@@ -51,7 +67,7 @@ async def refund_rate_limit_for_request(request: Request) -> None:
     
     # Trouver tous les RateLimiter appliqués à cette route
     route_index = 0
-    for i, route in enumerate(request.app.routes):
+    for i, route in enumerate(iter_routes(request.app.routes)):
         if route.path == request.scope["path"] and request.method in route.methods:
             route_index = i
             for j, dependency in enumerate(route.dependencies):

@@ -43,7 +43,7 @@ class RateLimiter:
         return pexpire
 
     async def __call__(self, request: Request, response: Response):
-        from fastapi_limiter import FastAPILimiter
+        from fastapi_limiter import FastAPILimiter, iter_routes
         
         if self.enable_bypass:
             for param in FastAPILimiter.query_param_names:
@@ -69,7 +69,7 @@ class RateLimiter:
             raise Exception("You must call FastAPILimiter.init in startup event of fastapi!")
         route_index = 0
         dep_index = 0
-        for i, route in enumerate(request.app.routes):
+        for i, route in enumerate(iter_routes(request.app.routes)):
             if route.path == request.scope["path"] and request.method in route.methods:
                 route_index = i
                 for j, dependency in enumerate(route.dependencies):
@@ -113,7 +113,7 @@ class ConditionalRateLimiter(RateLimiter):
         """
         Applique le rate limiting conditionnel pour une requête marquée comme ignorée.
         """
-        from fastapi_limiter import FastAPILimiter
+        from fastapi_limiter import FastAPILimiter, iter_routes
         
         if not FastAPILimiter.redis:
             raise Exception("You must call FastAPILimiter.init in startup event of fastapi!")
@@ -121,7 +121,7 @@ class ConditionalRateLimiter(RateLimiter):
         # Trouver l'index de cette route et de cette dépendance
         route_index = 0
         dep_index = 0
-        for i, route in enumerate(request.app.routes):
+        for i, route in enumerate(iter_routes(request.app.routes)):
             if route.path == request.scope["path"] and request.method in route.methods:
                 route_index = i
                 for j, dependency in enumerate(route.dependencies):

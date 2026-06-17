@@ -2,6 +2,15 @@
 
 ## 0.1
 
+### 0.1.10
+
+- **Fix**: compat FastAPI >= 0.116. `router.routes` est désormais un arbre (objets
+  intermédiaires `_IncludedRouter` sans `path`/`methods`) au lieu d'une liste plate
+  d'`APIRoute`. L'itération de `request.app.routes` levait `AttributeError: '_IncludedRouter'
+  object has no attribute 'path'` (HTTP 500 sur tout endpoint rate-limité). Ajout d'un
+  helper `iter_routes()` qui aplatit récursivement l'arbre et ne retient que les routes
+  réelles ; utilisé dans `RateLimiter`, `ConditionalRateLimiter` et `refund_rate_limit_for_request`.
+
 ### 0.1.5
 
 - Replace aioredis to redis.
