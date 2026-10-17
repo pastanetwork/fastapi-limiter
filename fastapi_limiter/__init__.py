@@ -27,8 +27,16 @@ def iter_routes(routes):
     `app.routes` SANS attribut `path`/`methods`. Itérer `app.routes` brut et lire
     `route.path` lève alors `AttributeError`. On descend récursivement et on ne yield
     que les vraies routes (avec `path` + `methods`), pour garder un index par-route.
+
+    FastAPI >= 0.137 ne donne plus `routes` à ses `_IncludedRouter` : leurs routes se lisent par
+    `effective_route_contexts()`, dont chaque contexte porte le chemin complet (préfixes d'inclusion
+    compris), les méthodes et les dépendances — ce que lit le limiteur.
     """
     for route in routes:
+        effective_route_contexts = getattr(route, "effective_route_contexts", None)
+        if callable(effective_route_contexts):
+            yield from effective_route_contexts()
+            continue
         if hasattr(route, "path") and hasattr(route, "methods"):
             yield route
         sub = getattr(route, "routes", None)

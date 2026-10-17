@@ -2,6 +2,14 @@
 
 ## 0.1
 
+### 0.1.11
+
+- **Fix**: compat FastAPI >= 0.137. Les `_IncludedRouter` n'ont plus d'attribut `routes` : leurs routes
+  se lisent par `effective_route_contexts()` (chemin complet préfixes compris, méthodes, dépendances).
+  Sans cela, `iter_routes()` ne voyait que les routes posées sur l'app, et toutes les routes des routers
+  inclus partageaient le même compteur (index 0). Test sans Redis : `tests/test_iter_routes.py`
+  (FastAPI 0.121, 0.136 et 0.143).
+
 ### 0.1.10
 
 - **Fix**: compat FastAPI >= 0.116. `router.routes` est désormais un arbre (objets
